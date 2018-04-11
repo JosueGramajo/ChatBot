@@ -41,6 +41,12 @@ public class MainActivity extends AppCompatActivity {
 
     public static int messageId = 1;
 
+    public boolean waitingConfirmation = false;
+
+    private enum action_type{
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String text = messageEditText.getText().toString();
-                if(text != ""){
+                if(!text.equals("")){
                     sendMessage(true, text);
                 }
             }
@@ -135,6 +141,10 @@ public class MainActivity extends AppCompatActivity {
             return response;
         }else if(text.contains("buenos dias") || text.contains("buen dia")){
             response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
+            return response;
+        }else if(text.contains("bloquear")){
+            response = "El bloqueo de tarjeta no puede realizarse por chat, desea lo comunique con un ascesor?";
+            waitingConfirmation = true;
             return response;
         }
 

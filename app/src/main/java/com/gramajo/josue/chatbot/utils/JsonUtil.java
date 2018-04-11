@@ -1,7 +1,9 @@
 package com.gramajo.josue.chatbot.utils;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.gramajo.josue.chatbot.objects.Message;
 
@@ -9,8 +11,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -18,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static android.content.Context.MODE_PRIVATE;
+import static android.content.Context.MODE_WORLD_READABLE;
 
 /**
  * Created by josuegramajo on 4/10/18.
@@ -65,14 +71,30 @@ public class JsonUtil {
     }
     public void writeMessageJsonFile(Context context, String json){
         try{
-            FileOutputStream fOut = context.openFileOutput("messages.json", MODE_PRIVATE);
+            /*FileOutputStream fOut = context.openFileOutput("messages.json", MODE_WORLD_READABLE);
             OutputStreamWriter osw = new OutputStreamWriter(fOut);
 
             osw.write(json);
             osw.flush();
-            osw.close();
-        }catch (Exception ex){
+            osw.close();*/
+            File root = new File(Environment.getExternalStorageDirectory().toString() + "/ChatBot");
+            File file = new File(Environment.getExternalStorageDirectory().toString() + "/ChatBot/messages.json");
 
+            if(!root.exists()){
+                root.mkdirs();
+            }
+
+            if(!file.exists()){
+                file.createNewFile();
+            }
+
+            File gpxfile = new File(root, "messages.json");
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(json);
+            writer.flush();
+            writer.close();
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
     }
 
@@ -80,8 +102,10 @@ public class JsonUtil {
         ArrayList<Message> retrievedMessages = new ArrayList<>();
         String json = null;
         try {
-            FileInputStream fIn = context.openFileInput("messages.json");
-            InputStream is = fIn;
+            //FileInputStream fIn = context.openFileInput("messages.json");
+
+            File f_path = new File(Environment.getExternalStorageDirectory().toString() + "/ChatBot/messages.json");
+            InputStream is = new BufferedInputStream(new FileInputStream(f_path));;
             int size = is.available();
             byte[] buffer = new byte[size];
             is.read(buffer);
@@ -89,7 +113,7 @@ public class JsonUtil {
             json = new String(buffer, "UTF-8");
         } catch (IOException ex) {
             ex.printStackTrace();
-            return null;
+            return retrievedMessages;
         }
 
         if(json != null){
@@ -98,8 +122,6 @@ public class JsonUtil {
                 JSONArray m_jArry = obj.getJSONArray("messages");
                 ArrayList<HashMap<String, String>> formList = new ArrayList<HashMap<String, String>>();
                 HashMap<String, String> m_li;
-
-                retrievedMessages = new ArrayList<Message>();
 
                 for (int i = 0; i < m_jArry.length(); i++) {
                     JSONObject jo_inside = m_jArry.getJSONObject(i);

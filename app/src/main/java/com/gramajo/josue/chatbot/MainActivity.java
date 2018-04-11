@@ -116,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         ArrayList<Message> readed = JsonUtil.INSTANCE.retrieveMessages(this);
         for(Message m : readed){
             displayMessage(m);
+            chatHistory.add(m);
         }
     }
 

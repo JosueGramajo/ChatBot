@@ -1,5 +1,6 @@
 package com.gramajo.josue.chatbot;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,24 +13,31 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.gramajo.josue.chatbot.adapters.ChatAdapter;
 import com.gramajo.josue.chatbot.objects.Message;
 import com.gramajo.josue.chatbot.utils.JsonUtil;
 
+import org.w3c.dom.Text;
+
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 public class MainActivity extends AppCompatActivity {
 
     private EditText messageEditText;
     private ListView chatListView;
-    private Button sendBtn;
     private ChatAdapter adapter;
     private ArrayList<Message> chatHistory;
+    private TextView chatState, chatName;
+
+    private String currentMessage = "";
 
     public static int messageId = 1;
 
@@ -42,16 +50,22 @@ public class MainActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        messageEditText = (EditText) findViewById(R.id.et_message);
+
+        chatState = (TextView) findViewById(R.id.tv_chatbot_state);
+
+        chatListView = (ListView) findViewById(R.id.lv_chat);
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab_send_message);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendMessage();
+                String text = messageEditText.getText().toString();
+                if(text != ""){
+                    sendMessage(true, text);
+                }
             }
         });
-
-        chatListView = (ListView) findViewById(R.id.lv_chat);
-        messageEditText = (EditText) findViewById(R.id.et_message);
 
         chatHistory = new ArrayList<Message>();
 
@@ -85,17 +99,14 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void sendMessage(){
-        String text = messageEditText.getText().toString();
-        if(text == ""){
-            return;
-        }
-
+    private void sendMessage(boolean selfMessage, String strMessage){
         Message message = new Message();
         message.setId(MainActivity.messageId++);
-        message.setMessage(text);
+        message.setMessage(strMessage);
         message.setDateTime(DateFormat.getDateTimeInstance().format(new Date()));
-        message.setSelfMessage(true);
+        message.setSelfMessage(selfMessage);
+
+        this.currentMessage = messageEditText.getText().toString();
 
         messageEditText.setText("");
 
@@ -104,6 +115,30 @@ public class MainActivity extends AppCompatActivity {
         chatHistory.add(message);
 
         JsonUtil.INSTANCE.writeMessageJsonFile(this, JsonUtil.INSTANCE.getMessageJson(chatHistory));
+
+        if(selfMessage){
+            new RespondeAsynchronously(false).execute();
+        }
+    }
+
+    private String decideResponse(){
+        String text = this.currentMessage.toLowerCase().trim();
+        String response = "";
+
+        Date date = new Date();
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.setTime(date);
+        int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+
+        if(text.contains("hola")){
+            response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
+            return response;
+        }else if(text.contains("buenos dias") || text.contains("buen dia")){
+            response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
+            return response;
+        }
+
+        return "Lo siento, no puedo entender la pregunta";
     }
 
     public void displayMessage(Message message) {
@@ -122,5 +157,48 @@ public class MainActivity extends AppCompatActivity {
 
     private void scroll() {
         chatListView.setSelection(chatListView.getCount() - 1);
+    }
+
+    private class RespondeAsynchronously extends AsyncTask<String, Void, String> {
+
+        boolean isWriting = false;
+
+        public RespondeAsynchronously(boolean isWriting){
+            this.isWriting = isWriting;
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            try {
+                int millis = isWriting ? 4000 : 1000;
+                Thread.sleep(millis);
+            } catch (InterruptedException e) {
+                Thread.interrupted();
+            }
+
+            return "Executed";
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if(isWriting){
+                chatState.setText("En Linea");
+                sendMessage(false, decideResponse());
+            }else{
+                chatState.setText("Escribiendo...");
+                new RespondeAsynchronously(true).execute();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+
+        }
     }
 }

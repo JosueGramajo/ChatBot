@@ -1,5 +1,7 @@
 package com.gramajo.josue.chatbot.utils;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
@@ -139,5 +141,29 @@ public class JsonUtil {
         }
 
         return retrievedMessages;
+    }
+
+    public void copyJsonToClipboard(Context context){
+        String json = "";
+        try {
+            FileInputStream fIn = context.openFileInput("messages.json");
+
+            //File f_path = new File(Environment.getExternalStorageDirectory().toString() + "/ChatBot/messages.json");
+
+            InputStream is = fIn;
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+            JSONObject objJson = new JSONObject(json);
+
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("", objJson.toString(4));
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(context, "Json copiado en portapapeles", Toast.LENGTH_SHORT).show();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

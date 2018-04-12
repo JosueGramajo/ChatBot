@@ -43,9 +43,26 @@ public class MainActivity extends AppCompatActivity {
 
     public boolean waitingConfirmation = false;
 
-    private enum action_type{
-
+    private enum ResponseType{
+        QUESTION,
+        CONFIRMATION,
+        CARD_NUMBER,
+        CARD_DATE,
+        CARD_SECURITY_NUMBER,
+        DEFAULT
     }
+    private enum ContextType{
+        CONSULT,
+        QUESTION,
+        BLOCK_CARD,
+        ACTIVATE_CARD,
+        ACTIVATE_ABROAD_CARD,
+        POINTS_INFORMATION,
+        BALANCE_INFORMATION,
+        MOVEMENT_INFORMATION
+    }
+
+    private ResponseType expectedResponseType = ResponseType.DEFAULT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,10 +114,9 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            JsonUtil.INSTANCE.copyJsonToClipboard(this);
             return true;
         }
-
-
 
         return super.onOptionsItemSelected(item);
     }
@@ -136,15 +152,17 @@ public class MainActivity extends AppCompatActivity {
         calendar.setTime(date);
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 
-        if(text.contains("hola")){
+        if(text.contains("hola") || text.contains("buenos dias") || text.contains("buen dia")){
             response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
+            expectedResponseType = ResponseType.DEFAULT;
             return response;
-        }else if(text.contains("buenos dias") || text.contains("buen dia")){
-            response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
-            return response;
-        }else if(text.contains("bloquear")){
+        }else if(text.contains("bloquear") || text.contains("bloqueo") || text.contains("bloqueen")){
             response = "El bloqueo de tarjeta no puede realizarse por chat, desea lo comunique con un ascesor?";
-            waitingConfirmation = true;
+            expectedResponseType = ResponseType.CONFIRMATION;
+            return response;
+        }else if(text.contains("puntos") && text.contains("cuantos")){
+            response = "Con gusto puedo indicarle cuantos puntos tiene acumulados, seria tan amable de brindarme el numero de tarjeta?";
+            expectedResponseType = ResponseType.CARD_NUMBER;
             return response;
         }
 
@@ -154,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
     public void displayMessage(Message message) {
         adapter.add(message);
         adapter.notifyDataSetChanged();
-        scroll();
+        scrollToLastMessage();
     }
 
     private void checkForExistingMessages(){
@@ -165,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void scroll() {
+    private void scrollToLastMessage() {
         chatListView.setSelection(chatListView.getCount() - 1);
     }
 
@@ -179,14 +197,12 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-
             try {
                 int millis = isWriting ? 4000 : 1000;
                 Thread.sleep(millis);
             } catch (InterruptedException e) {
                 Thread.interrupted();
             }
-
             return "Executed";
         }
 

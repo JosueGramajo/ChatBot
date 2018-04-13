@@ -1,14 +1,19 @@
 package com.gramajo.josue.chatbot;
 
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,6 +43,10 @@ public class MainActivity extends AppCompatActivity {
     public static int messageId = 1;
 
     public boolean waitingConfirmation = false;
+
+    public static String user = "";
+
+    SharedPreferences settings;
 
     private enum ResponseType{
         QUESTION,
@@ -81,7 +90,11 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String text = messageEditText.getText().toString();
                 if(!text.equals("")){
-                    sendMessage(true, text);
+                    if(user.equals("")){
+                        checkStoredUser();
+                    }else{
+                        sendMessage(true, text);
+                    }
                 }
             }
         });
@@ -91,7 +104,44 @@ public class MainActivity extends AppCompatActivity {
         adapter = new ChatAdapter(MainActivity.this, new ArrayList<Message>());
         chatListView.setAdapter(adapter);
 
+        settings = getSharedPreferences("HAL_CHAT_BOT", Context.MODE_PRIVATE);
+
+        checkStoredUser();
         checkForExistingMessages();
+    }
+
+    private void checkStoredUser(){
+        user = settings.getString("tester_user","");
+
+        if(user.equals("")){
+            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+            LinearLayout container = new LinearLayout(this);
+            container.setOrientation(LinearLayout.VERTICAL);
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.setMargins(10, 5, 10, 5);
+
+            final EditText edittext = new EditText(this);
+            edittext.setLayoutParams(lp);
+
+            alert.setMessage("Ingresar usuario");
+            alert.setTitle("Favor de ingresar un nombre de usuario para iniciar las pruebas");
+
+            container.addView(edittext);
+
+            alert.setView(container);
+
+            alert.setPositiveButton("ACEPTAR", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    String value = edittext.getText().toString();
+                    SharedPreferences.Editor editor = settings.edit();
+                    editor.putString("tester_user", value);
+                    editor.commit();
+                }
+            });
+
+            alert.show();
+        }
     }
 
     @Override
@@ -127,17 +177,16 @@ public class MainActivity extends AppCompatActivity {
         message.setDateTime(DateFormat.getDateTimeInstance().format(new Date()));
         message.setSelfMessage(selfMessage);
 
-        this.currentMessage = messageEditText.getText().toString();
-
-        messageEditText.setText("");
-
-        displayMessage(message);
-
         chatHistory.addMessage(message);
+
+        currentMessage = messageEditText.getText().toString();
 
         JsonUtil.INSTANCE.writeJson(this, chatHistory, JsonUtil.FILE_TYPE.MESSAGES);
 
+        displayMessage(message);
+
         if(selfMessage){
+            messageEditText.setText("");
             new RespondeAsynchronously(false).execute();
         }
     }

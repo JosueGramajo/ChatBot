@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.gramajo.josue.chatbot.MainActivity;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,8 +32,12 @@ public class FirebaseUtils {
     public void saveUnansweredQuestionInFirestore(String q){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+        ArrayList<String> s = new ArrayList<String>();
+        s.add(q);
+        s.add(MainActivity.user);
+
         Map<String, Object> user = new HashMap<>();
-        user.put("unanswered", q);
+        user.put("unanswered", s);
 
         db.collection("firestore_q")
                 .add(user)

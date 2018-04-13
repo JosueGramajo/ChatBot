@@ -3,26 +3,20 @@ package com.gramajo.josue.chatbot;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.gramajo.josue.chatbot.adapters.ChatAdapter;
-import com.gramajo.josue.chatbot.objects.Message;
-import com.gramajo.josue.chatbot.utils.JsonUtil;
+import com.gramajo.josue.chatbot.Adapters.ChatAdapter;
+import com.gramajo.josue.chatbot.Objects.Message;
+import com.gramajo.josue.chatbot.Objects.JsonObjects.Messages;
+import com.gramajo.josue.chatbot.Utils.JsonUtil;
 
-import org.w3c.dom.Text;
-
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,8 +28,9 @@ public class MainActivity extends AppCompatActivity {
     private EditText messageEditText;
     private ListView chatListView;
     private ChatAdapter adapter;
-    private ArrayList<Message> chatHistory;
     private TextView chatState, chatName;
+
+    private Messages chatHistory;
 
     private String currentMessage = "";
 
@@ -90,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        chatHistory = new ArrayList<Message>();
+        chatHistory = new Messages();
 
         adapter = new ChatAdapter(MainActivity.this, new ArrayList<Message>());
         chatListView.setAdapter(adapter);
@@ -113,8 +108,11 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            JsonUtil.INSTANCE.copyJsonToClipboard(this);
+        if (id == R.id.action_messages) {
+            JsonUtil.INSTANCE.copyJsonContentToClipboard(this, JsonUtil.FILE_TYPE.MESSAGES);
+            return true;
+        }else if (id == R.id.action_questions){
+            JsonUtil.INSTANCE.copyJsonContentToClipboard(this, JsonUtil.FILE_TYPE.QUESTIONS);
             return true;
         }
 
@@ -134,9 +132,9 @@ public class MainActivity extends AppCompatActivity {
 
         displayMessage(message);
 
-        chatHistory.add(message);
+        chatHistory.addMessage(message);
 
-        JsonUtil.INSTANCE.writeMessageJsonFile(this, JsonUtil.INSTANCE.getMessageJson(chatHistory));
+        JsonUtil.INSTANCE.writeJson(this, chatHistory, JsonUtil.FILE_TYPE.MESSAGES);
 
         if(selfMessage){
             new RespondeAsynchronously(false).execute();
@@ -176,10 +174,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkForExistingMessages(){
-        ArrayList<Message> readed = JsonUtil.INSTANCE.retrieveMessages(this);
-        for(Message m : readed){
-            displayMessage(m);
-            chatHistory.add(m);
+        try{
+            Messages readed = JsonUtil.INSTANCE.readJSON(this, JsonUtil.FILE_TYPE.MESSAGES, Messages.class);
+            for(Message m : readed.getMessages()){
+                displayMessage(m);
+                chatHistory.addMessage(m);
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
         }
     }
 

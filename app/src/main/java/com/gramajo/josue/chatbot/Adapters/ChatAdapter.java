@@ -1,4 +1,4 @@
-package com.gramajo.josue.chatbot.adapters;
+package com.gramajo.josue.chatbot.Adapters;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,7 +12,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.gramajo.josue.chatbot.R;
-import com.gramajo.josue.chatbot.objects.Message;
+import com.gramajo.josue.chatbot.Objects.Message;
 
 import java.util.List;
 

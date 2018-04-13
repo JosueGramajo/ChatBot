@@ -1,19 +1,33 @@
-package com.gramajo.josue.chatbot.objects;
+package com.gramajo.josue.chatbot.Objects;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by josuegramajo on 4/10/18.
  */
 
-public class Message {
+public class Message extends BaseObject{
+    @JsonProperty("id")
     private int id;
+
+    @JsonProperty("selfMessage")
     private boolean selfMessage;
+
+    @JsonProperty("message")
     private String message;
+
+    @JsonProperty("dateTime")
     private String dateTime;
-    
 
     public Message(){}
 
-    public Message(int id, boolean selfMessage, String message, String dateTime) {
+    @JsonCreator
+    public Message(@JsonProperty("id") int id,
+                   @JsonProperty("selfMessage") boolean selfMessage,
+                   @JsonProperty("message") String message,
+                   @JsonProperty("dateTime") String dateTime) {
+
         this.id = id;
         this.selfMessage = selfMessage;
         this.message = message;

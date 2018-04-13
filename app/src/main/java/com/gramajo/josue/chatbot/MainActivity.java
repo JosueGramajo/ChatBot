@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.gramajo.josue.chatbot.Adapters.ChatAdapter;
 import com.gramajo.josue.chatbot.Objects.Message;
 import com.gramajo.josue.chatbot.Objects.JsonObjects.Messages;
+import com.gramajo.josue.chatbot.Utils.FirebaseUtils;
 import com.gramajo.josue.chatbot.Utils.JsonUtil;
 
 import java.text.DateFormat;
@@ -164,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
             return response;
         }
 
+        FirebaseUtils.INSTANCE.saveUnansweredQuestionInFirestore(text);
         return "Lo siento, no puedo entender la pregunta";
     }
 

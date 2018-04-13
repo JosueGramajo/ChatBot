@@ -44,7 +44,6 @@ public class JsonUtil {
         try{
             FileOutputStream fOut = context.openFileOutput(type.rawValue() + ".json", MODE_PRIVATE);
             OutputStreamWriter osw = new OutputStreamWriter(fOut);
-
             ObjectMapper mapper = new ObjectMapper();
             mapper.writeValue(osw, object);
         }catch (Exception ex){
@@ -59,7 +58,7 @@ public class JsonUtil {
 
     public void copyJsonContentToClipboard(Context context, FILE_TYPE type){
         try {
-            InputStream is = context.openFileInput(type + ".json");
+            InputStream is = context.openFileInput(type.rawValue() + ".json");
             byte[] buffer = new byte[is.available()];
             is.read(buffer);
             is.close();

@@ -105,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
 
         settings = getSharedPreferences("HAL_CHAT_BOT", Context.MODE_PRIVATE);
         GlobalAccess.USER = settings.getString("tester_user","");
-
         if(GlobalAccess.USER.equals("")){
             requestUser();
         }else{
@@ -113,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         checkForExistingMessages();
+
+        FirebaseUtils.INSTANCE.getMessages();
     }
 
     private void requestUser(){
@@ -250,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(String... params) {
             try {
-                int millis = isWriting ? 4000 : 1000;
+                int millis = isWriting ? 3000 : 1000;
                 Thread.sleep(millis);
             } catch (InterruptedException e) {
                 Thread.interrupted();

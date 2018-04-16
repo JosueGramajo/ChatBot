@@ -9,9 +9,12 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.gramajo.josue.chatbot.Objects.JsonObjects.Messages;
+import com.gramajo.josue.chatbot.Objects.Message;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +38,21 @@ public class FirebaseUtils {
         }else{
             updateUnansweredQuestionsInFirestore(q);
         }
+    }
+    public void saveMessagesInFirestore(Messages message){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection(collectionID).document("LA").set(message);
+    }
+    public void getMessages(){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference docRef = db.collection(collectionID).document("LA");
+        docRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                Messages city = documentSnapshot.toObject(Messages.class);
+                System.out.println("hello moto");
+            }
+        });
     }
     private void saveUnansweredQuestionInFirestore(String q){
         FirebaseFirestore db = FirebaseFirestore.getInstance();

@@ -3,13 +3,15 @@ package com.gramajo.josue.chatbot.Utils;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.gms.tasks.Task;
+
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.gramajo.josue.chatbot.MainActivity;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,28 +25,33 @@ import static android.content.ContentValues.TAG;
 
 public class FirebaseUtils {
     public static FirebaseUtils INSTANCE = new FirebaseUtils();
+    private final String collectionID = "firestore_chatbot_q";
+    private final String nameID = "name";
+    private final String questionID = "questions";
 
     public void saveUnansweredQuestion(String q){
-        FirebaseDatabase db = FirebaseDatabase.getInstance();
-        DatabaseReference ref = db.getReference("questions");
-        ref.setValue(q);
+        if(GlobalAccess.DOCUMENT_ID.equals("")){
+            saveUnansweredQuestionInFirestore(q);
+        }else{
+            updateUnansweredQuestionsInFirestore(q);
+        }
     }
-    public void saveUnansweredQuestionInFirestore(String q){
+    private void saveUnansweredQuestionInFirestore(String q){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        ArrayList<String> s = new ArrayList<String>();
-        s.add(q);
-        s.add(MainActivity.user);
+        GlobalAccess.DOCUMENT_QUESTIONS.add(q);
 
         Map<String, Object> user = new HashMap<>();
-        user.put("unanswered", s);
+        user.put(nameID, GlobalAccess.USER);
+        user.put(questionID, GlobalAccess.DOCUMENT_QUESTIONS);
 
-        db.collection("firestore_q")
+        db.collection(collectionID)
                 .add(user)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
                     @Override
                     public void onSuccess(DocumentReference documentReference) {
                         Log.d(TAG, "DocumentSnapshot added with ID: " + documentReference.getId());
+                        GlobalAccess.DOCUMENT_ID = documentReference.getId();
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -53,5 +60,60 @@ public class FirebaseUtils {
                         e.printStackTrace();
                     }
                 });
+    }
+    private void updateUnansweredQuestionsInFirestore(String q){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        DocumentReference reference = db.collection(collectionID).document(GlobalAccess.DOCUMENT_ID);
+
+        GlobalAccess.DOCUMENT_QUESTIONS.add(q);
+
+        reference
+                .update(questionID, GlobalAccess.DOCUMENT_QUESTIONS)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "DocumentSnapshot successfully updated!");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.w(TAG, "Error updating document", e);
+                    }
+                });
+    }
+    public void checkForExistingData(){
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection(collectionID)
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                containsUser(document);
+                            }
+                        } else {
+                            Log.d(TAG, "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+    }
+    private void containsUser(QueryDocumentSnapshot document){
+        boolean correctUser = false;
+
+        for (Map.Entry<String, Object> entry : document.getData().entrySet()) {
+            if(entry.getKey().equals(nameID) && entry.getValue().toString().equals(GlobalAccess.USER)){
+                GlobalAccess.DOCUMENT_ID = document.getId();
+                correctUser = true;
+            }
+        }
+        if(correctUser){
+            for (Map.Entry<String, Object> entry : document.getData().entrySet()) {
+                if(entry.getKey().equals(questionID)){
+                    GlobalAccess.DOCUMENT_QUESTIONS = (ArrayList<String>) entry.getValue();
+                }
+            }
+        }
     }
 }

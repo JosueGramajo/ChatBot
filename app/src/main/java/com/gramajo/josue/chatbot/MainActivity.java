@@ -21,6 +21,7 @@ import com.gramajo.josue.chatbot.Adapters.ChatAdapter;
 import com.gramajo.josue.chatbot.Objects.Message;
 import com.gramajo.josue.chatbot.Objects.JsonObjects.Messages;
 import com.gramajo.josue.chatbot.Utils.FirebaseUtils;
+import com.gramajo.josue.chatbot.Utils.GlobalAccess;
 import com.gramajo.josue.chatbot.Utils.JsonUtil;
 
 import java.text.DateFormat;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+
+import javax.microedition.khronos.opengles.GL;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,11 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String currentMessage = "";
 
-    public static int messageId = 1;
-
-    public static String user = "";
-
-    public boolean waitingConfirmation = false;
+    boolean waitingConfirmation = false;
 
     SharedPreferences settings;
 
@@ -90,8 +89,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String text = messageEditText.getText().toString();
                 if(!text.equals("")){
-                    if(user.equals("")){
-                        checkStoredUser();
+                    if(GlobalAccess.USER.equals("")){
+                        requestUser();
                     }else{
                         sendMessage(true, text);
                     }
@@ -105,43 +104,48 @@ public class MainActivity extends AppCompatActivity {
         chatListView.setAdapter(adapter);
 
         settings = getSharedPreferences("HAL_CHAT_BOT", Context.MODE_PRIVATE);
+        GlobalAccess.USER = settings.getString("tester_user","");
 
-        checkStoredUser();
+        if(GlobalAccess.USER.equals("")){
+            requestUser();
+        }else{
+            FirebaseUtils.INSTANCE.checkForExistingData();
+        }
+
         checkForExistingMessages();
     }
 
-    private void checkStoredUser(){
-        user = settings.getString("tester_user","");
+    private void requestUser(){
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(10, 5, 10, 5);
 
-        if(user.equals("")){
-            AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        final EditText edittext = new EditText(this);
+        edittext.setLayoutParams(lp);
 
-            LinearLayout container = new LinearLayout(this);
-            container.setOrientation(LinearLayout.VERTICAL);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.setMargins(10, 5, 10, 5);
+        alert.setMessage("Ingresar usuario");
+        alert.setTitle("Favor de ingresar un nombre de usuario para iniciar las pruebas");
 
-            final EditText edittext = new EditText(this);
-            edittext.setLayoutParams(lp);
+        container.addView(edittext);
 
-            alert.setMessage("Ingresar usuario");
-            alert.setTitle("Favor de ingresar un nombre de usuario para iniciar las pruebas");
+        alert.setView(container);
 
-            container.addView(edittext);
+        alert.setPositiveButton("ACEPTAR", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = edittext.getText().toString();
+                SharedPreferences.Editor editor = settings.edit();
+                editor.putString("tester_user", value);
+                editor.commit();
 
-            alert.setView(container);
+                GlobalAccess.USER = value;
 
-            alert.setPositiveButton("ACEPTAR", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                    String value = edittext.getText().toString();
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString("tester_user", value);
-                    editor.commit();
-                }
-            });
+                FirebaseUtils.INSTANCE.checkForExistingData();
+            }
+        });
 
-            alert.show();
-        }
+        alert.show();
     }
 
     @Override
@@ -167,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendMessage(boolean selfMessage, String strMessage){
         Message message = new Message();
-        message.setId(MainActivity.messageId++);
+        message.setId(GlobalAccess.MESSAGE_ID++);
         message.setMessage(strMessage);
         message.setDateTime(DateFormat.getDateTimeInstance().format(new Date()));
         message.setSelfMessage(selfMessage);
@@ -209,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
             return response;
         }
 
-        FirebaseUtils.INSTANCE.saveUnansweredQuestionInFirestore(text);
+        FirebaseUtils.INSTANCE.saveUnansweredQuestion(text);
         return "Lo siento, no puedo entender la pregunta";
     }
 

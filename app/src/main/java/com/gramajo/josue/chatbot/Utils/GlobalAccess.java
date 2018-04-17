@@ -1,5 +1,7 @@
 package com.gramajo.josue.chatbot.Utils;
 
+import com.gramajo.josue.chatbot.Objects.Node;
+
 import java.util.ArrayList;
 
 /**
@@ -14,4 +16,21 @@ public class GlobalAccess {
     public static String DOCUMENT_ID = "";
 
     public static ArrayList<String> DOCUMENT_QUESTIONS = new ArrayList<String>();
+
+    public static Node TREE;
+
+    public enum ConversationContext{
+        BLOCK_CARD("bloquear"),
+        POINTS("puntos"),
+        BALANCE("saldo"),
+        NONE("");
+
+        private String value;
+        ConversationContext(String value){
+            this.value = value;
+        }
+        public String rawValue(){
+            return this.value;
+        }
+    }
 }

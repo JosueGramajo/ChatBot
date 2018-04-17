@@ -1,4 +1,4 @@
-package com.gramajo.josue.chatbot.Objects.JsonObjects;
+package com.gramajo.josue.chatbot.Objects.ObjectLists;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -73,4 +73,19 @@ public class JsonUtil {
             ex.printStackTrace();
         }
     }
+
+    public void copyObjectAsJsonString(BaseObject obj, Context context){
+        try{
+            ObjectMapper mapper = new ObjectMapper();
+            String strJson = mapper.writeValueAsString(obj);
+            JSONObject objJson = new JSONObject(strJson);
+
+            ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("", objJson.toString(4));
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(context, "Json copiado en portapapeles", Toast.LENGTH_SHORT).show();
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
 }

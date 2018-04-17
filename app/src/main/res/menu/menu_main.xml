@@ -10,6 +10,16 @@
     <item
         android:id="@+id/action_questions"
         android:orderInCategory="100"
-        android:title="Copiar preguntas"
+        android:title="Copiar Json de arbol"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/update_firestore"
+        android:orderInCategory="100"
+        android:title="Actualizar Firestore"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/update_tree"
+        android:orderInCategory="100"
+        android:title="Actualizar Arbol"
         app:showAsAction="never" />
 </menu>

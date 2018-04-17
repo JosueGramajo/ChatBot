@@ -18,13 +18,16 @@
         <EditText
             android:id="@+id/et_message"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_toLeftOf="@+id/fab_send_message"
             android:autoText="true"
             android:hint="Escribe un mensaje"
             android:background="@drawable/rounded_edittext"
-            android:padding="15dp"/>
+            android:padding="15dp"
+            android:inputType="textCapSentences|textMultiLine"
+            android:maxLength="2000"
+            android:maxLines="4" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_send_message"

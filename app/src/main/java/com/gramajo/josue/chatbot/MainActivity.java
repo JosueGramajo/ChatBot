@@ -9,9 +9,11 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -19,7 +21,9 @@ import android.widget.TextView;
 
 import com.gramajo.josue.chatbot.Adapters.ChatAdapter;
 import com.gramajo.josue.chatbot.Objects.Message;
-import com.gramajo.josue.chatbot.Objects.JsonObjects.Messages;
+import com.gramajo.josue.chatbot.Objects.Node;
+import com.gramajo.josue.chatbot.Objects.ObjectLists.Messages;
+import com.gramajo.josue.chatbot.Utils.DecisionTree;
 import com.gramajo.josue.chatbot.Utils.FirebaseUtils;
 import com.gramajo.josue.chatbot.Utils.GlobalAccess;
 import com.gramajo.josue.chatbot.Utils.JsonUtil;
@@ -29,8 +33,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-
-import javax.microedition.khronos.opengles.GL;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         CARD_SECURITY_NUMBER,
         DEFAULT
     }
-    private enum ContextType{
+    /*private enum ContextType{
         CONSULT,
         QUESTION,
         BLOCK_CARD,
@@ -64,9 +66,12 @@ public class MainActivity extends AppCompatActivity {
         POINTS_INFORMATION,
         BALANCE_INFORMATION,
         MOVEMENT_INFORMATION
-    }
+    }*/
 
     private ResponseType expectedResponseType = ResponseType.DEFAULT;
+
+    private String evaluationTreeID = "";
+    private Node evaulationTree;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,12 +113,12 @@ public class MainActivity extends AppCompatActivity {
         if(GlobalAccess.USER.equals("")){
             requestUser();
         }else{
-            FirebaseUtils.INSTANCE.checkForExistingData();
+            FirebaseUtils.INSTANCE.checkForExistingTestingUser();
         }
 
         checkForExistingMessages();
 
-        FirebaseUtils.INSTANCE.getMessages();
+        FirebaseUtils.INSTANCE.retrieveDecisionTree();
     }
 
     private void requestUser(){
@@ -142,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
                 GlobalAccess.USER = value;
 
-                FirebaseUtils.INSTANCE.checkForExistingData();
+                FirebaseUtils.INSTANCE.checkForExistingTestingUser();
             }
         });
 
@@ -163,7 +168,13 @@ public class MainActivity extends AppCompatActivity {
             JsonUtil.INSTANCE.copyJsonContentToClipboard(this, JsonUtil.FILE_TYPE.MESSAGES);
             return true;
         }else if (id == R.id.action_questions){
-            JsonUtil.INSTANCE.copyJsonContentToClipboard(this, JsonUtil.FILE_TYPE.QUESTIONS);
+            JsonUtil.INSTANCE.copyObjectAsJsonString(GlobalAccess.TREE, this);
+            return true;
+        }else if(id == R.id.update_tree){
+            FirebaseUtils.INSTANCE.retrieveDecisionTree();
+            return true;
+        }else if(id == R.id.update_firestore){
+            DecisionTree.INSTANCE.saveTree();
             return true;
         }
 
@@ -179,7 +190,7 @@ public class MainActivity extends AppCompatActivity {
 
         chatHistory.addMessage(message);
 
-        currentMessage = messageEditText.getText().toString();
+        currentMessage = strMessage;
 
         JsonUtil.INSTANCE.writeJson(this, chatHistory, JsonUtil.FILE_TYPE.MESSAGES);
 
@@ -189,33 +200,6 @@ public class MainActivity extends AppCompatActivity {
             messageEditText.setText("");
             new RespondeAsynchronously(false).execute();
         }
-    }
-
-    private String decideResponse(){
-        String text = this.currentMessage.toLowerCase().trim();
-        String response = "";
-
-        Date date = new Date();
-        Calendar calendar = GregorianCalendar.getInstance();
-        calendar.setTime(date);
-        int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
-
-        if(text.contains("hola") || text.contains("buenos dias") || text.contains("buen dia")){
-            response = ((hourOfDay >= 12) ? "Buenas tardes" : "Buenos dias") + ", como puedo ayudarlo?";
-            expectedResponseType = ResponseType.DEFAULT;
-            return response;
-        }else if(text.contains("bloquear") || text.contains("bloqueo") || text.contains("bloqueen")){
-            response = "El bloqueo de tarjeta no puede realizarse por chat, desea lo comunique con un ascesor?";
-            expectedResponseType = ResponseType.CONFIRMATION;
-            return response;
-        }else if(text.contains("puntos") && text.contains("cuantos")){
-            response = "Con gusto puedo indicarle cuantos puntos tiene acumulados, seria tan amable de brindarme el numero de tarjeta?";
-            expectedResponseType = ResponseType.CARD_NUMBER;
-            return response;
-        }
-
-        FirebaseUtils.INSTANCE.saveUnansweredQuestion(text);
-        return "Lo siento, no puedo entender la pregunta";
     }
 
     public void displayMessage(Message message) {
@@ -238,6 +222,110 @@ public class MainActivity extends AppCompatActivity {
 
     private void scrollToLastMessage() {
         chatListView.setSelection(chatListView.getCount() - 1);
+    }
+
+    private String decideResponse(){
+        String text = this.currentMessage.toLowerCase().trim();
+        String response = "";
+
+        if(evaulationTree == null) evaulationTree = GlobalAccess.TREE;
+
+        if(evaluationTreeID == ""){
+            if(validateNode(evaulationTree, text)){
+                return evaulationTree.getResponse();
+            }else{
+                for(Node n : evaulationTree.getChildren()){
+                    if(validateNode(n, text)){
+                        evaluationTreeID = n.getId();
+                        return n.getResponse();
+                    }
+                }
+            }
+        }else{
+            searchEvaluationTree(GlobalAccess.TREE);
+
+            for(Node n : evaulationTree.getChildren()){
+                if(validateNode(n, text)){
+                    if(!n.getDecisionType().equals("repeat")){
+                        evaluationTreeID = n.getId();
+                        if(n.getChildren() == null){
+                            evaulationTree = null;
+                            evaluationTreeID = "";
+                        }
+                    }
+
+                    return n.getResponse();
+                }
+            }
+        }
+
+
+        FirebaseUtils.INSTANCE.saveUnansweredQuestion(text);
+        return "Lo siento, no puedo entender la pregunta";
+    }
+
+    private void searchEvaluationTree(Node node){
+        //Esta funcion recursiva busca el nodo el cual su id sea igual a evaluationTreeID,
+        //  esto quiere decir que encontrara el nodo sobre el cual el chatbot realizo la pregunta anterior
+        if(node.getId().equals(evaluationTreeID)){
+            evaulationTree = node;
+        }else{
+            if(node.getChildren() != null){
+                for(Node n : node.getChildren()){
+                    searchEvaluationTree(n);
+                }
+            }
+        }
+    }
+
+    private boolean validateNode(Node node, String text){
+        switch (node.getDecisionType()){
+            case "contains":
+                for(String s : node.getKeyWords()){
+                    if(text.contains(s)){
+                        return true;
+                    }
+                }
+                break;
+            case "card":
+                return validateCreditCard(text);
+
+            case "repeat": return true;
+            case "default": return true;
+        }
+
+        return false;
+    }
+
+    private boolean validateCreditCard(String card){
+        try{
+            Long.parseLong(card);
+        }catch (NumberFormatException nfe){
+            return false;
+        }
+
+        ArrayList<Integer> multipliedNumbers = new ArrayList<>();
+        //4 0 1 2 8 8 8 8 8 8 8 8 1 8 8 1
+        for(int i = 0;i<card.length();i++){
+            String character = card.substring(i, i + 1);
+            if(i % 2 == 0){
+                int result = Integer.parseInt(character) * 2;
+                String strResult = String.valueOf(result);
+                if(strResult.length() > 1){
+                    result = Integer.parseInt(strResult.substring(0,1)) + Integer.parseInt(strResult.substring(1,2));
+                }
+
+                multipliedNumbers.add(result);
+            }else{
+                multipliedNumbers.add(Integer.parseInt(character));
+            }
+        }
+        int total = 0;
+        for(int i : multipliedNumbers){
+            total = total + i;
+        }
+
+        return total % 10 == 0;
     }
 
     private class RespondeAsynchronously extends AsyncTask<String, Void, String> {

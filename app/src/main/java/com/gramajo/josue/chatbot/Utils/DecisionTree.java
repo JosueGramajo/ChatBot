@@ -147,6 +147,51 @@ public class DecisionTree {
         //****************************************************************
 
         //****************************************************************
+        Node node8 = new Node();
+        node8.setDecisionType(CONTAINS);
+        node8.addKeyWord("duda");
+        node8.addKeyWord("consulta");
+        node8.addKeyWord("pregunta");
+        node8.setLevel(2);
+        node8.setResponse("Cuenteme, como puedo ayudarlo?");
+        //****************************************************************
+
+        //****************************************************************
+        Node node9 = new Node();
+        node9.setDecisionType(CONTAINS_ALL);
+        node9.addKeyWord("fecha");
+        node9.addKeyWord("corte");
+        node9.setLevel(2);
+        node9.setResponse("Para proporcionarle su fecha de corte, podria por favor indicarme el numero de su tarjeta?");
+
+        Node node9_1 = new Node();
+        node9_1.setDecisionType(CARD);
+        node9_1.setLevel(3);
+        node9_1.setResponse("Su fecha de corte es el dia 05 de cada mes");
+
+        node9.addChildren(node9_1);
+        node9.addChildren(exit);
+        node9.addChildren(validationFailed);
+        //****************************************************************
+
+        //****************************************************************
+        Node node10 = new Node();
+        node10.setDecisionType(CONTAINS_ALL);
+        node10.addKeyWord("fecha");
+        node10.addKeyWord("pago");
+        node10.setLevel(2);
+        node10.setResponse("La fecha de pago para todas nuestras tarjetas es el fin de cada mes");
+        //****************************************************************
+
+        //****************************************************************
+        Node node98 = new Node();
+        node98.setDecisionType(CONTAINS);
+        node98.addKeyWord("gracias");
+        node98.setLevel(2);
+        node98.setResponse("Ha sido un gusto servirle");
+        //****************************************************************
+
+        //****************************************************************
         Node node99 = new Node();
         node99.setDecisionType(CONTAINS_ALL);
         node99.addKeyWord("buena");
@@ -163,6 +208,22 @@ public class DecisionTree {
         node100.setResponse("Que es un terapeuta? 1024 gigapeutas (☞ﾟヮﾟ)☞");
         //****************************************************************
 
+        //****************************************************************
+        Node node101 = new Node();
+        node101.setDecisionType(CONTAINS);
+        node101.addKeyWord("\uD83D\uDE31");
+        node101.setLevel(2);
+        node101.setResponse("Que paso??? \uD83D\uDE31");
+        //****************************************************************
+
+        //****************************************************************
+        Node node102 = new Node();
+        node102.setDecisionType(CONTAINS);
+        node102.addKeyWord("\uD83D\uDE02");
+        node102.setLevel(2);
+        node102.setResponse("jio jio \uD83D\uDE02 \uD83D\uDE02 \uD83D\uDE02");
+        //****************************************************************
+
         masterNode.addChildren(node1);
         masterNode.addChildren(node2);
         masterNode.addChildren(node3);
@@ -170,8 +231,14 @@ public class DecisionTree {
         masterNode.addChildren(node5);
         masterNode.addChildren(node6);
         masterNode.addChildren(node7);
+        masterNode.addChildren(node8);
+        masterNode.addChildren(node9);
+        masterNode.addChildren(node10);
+        masterNode.addChildren(node98);
         masterNode.addChildren(node99);
         masterNode.addChildren(node100);
+        masterNode.addChildren(node101);
+        masterNode.addChildren(node102);
 
         return masterNode;
     }

@@ -1,7 +1,9 @@
 package com.gramajo.josue.chatbot.Utils;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -126,13 +128,14 @@ public class FirebaseUtils {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         db.collection(collectionID).document(treeID).set(node);
     }
-    public void retrieveDecisionTree(){
+    public void retrieveDecisionTree(final Context context){
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         DocumentReference docRef = db.collection(collectionID).document(treeID);
         docRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 GlobalAccess.TREE = documentSnapshot.toObject(Node.class);
+                Toast.makeText(context, "Arbol actualizado", Toast.LENGTH_SHORT).show();
             }
 
         });

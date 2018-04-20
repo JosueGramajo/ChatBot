@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
         checkForExistingMessages();
 
-        FirebaseUtils.INSTANCE.retrieveDecisionTree();
+        FirebaseUtils.INSTANCE.retrieveDecisionTree(this);
     }
 
     private void requestUser(){
@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             JsonUtil.INSTANCE.copyObjectAsJsonString(GlobalAccess.TREE, this);
             return true;
         }else if(id == R.id.update_tree){
-            FirebaseUtils.INSTANCE.retrieveDecisionTree();
+            FirebaseUtils.INSTANCE.retrieveDecisionTree(this);
             return true;
         }else if(id == R.id.update_firestore){
             DecisionTree.INSTANCE.saveTree();
@@ -298,13 +298,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean validateCreditCard(String card){
+        //Luhn Algorithm
         try{
             Long.parseLong(card);
         }catch (NumberFormatException nfe){
             return false;
         }
         ArrayList<Integer> multipliedNumbers = new ArrayList<>();
-        //4 0 1 2 8 8 8 8 8 8 8 8 1 8 8 1
         for(int i = 0;i<card.length();i++){
             String character = card.substring(i, i + 1);
             if(i % 2 == 0){

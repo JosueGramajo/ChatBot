@@ -27,6 +27,15 @@ public class Node extends BaseObject{
         this.response = response;
     }
 
+    public void addKeyWord(String word){
+        if(keyWords == null) keyWords = new ArrayList<>();
+        keyWords.add(word);
+    }
+    public void addChildren(Node node){
+        if(children == null) children = new ArrayList<>();
+        children.add(node);
+    }
+
     public Node(){
         setId(RandomID.INSTANCE.randomString(20));
     }

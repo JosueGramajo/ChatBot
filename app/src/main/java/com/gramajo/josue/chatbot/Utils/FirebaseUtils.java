@@ -134,6 +134,7 @@ public class FirebaseUtils {
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 GlobalAccess.TREE = documentSnapshot.toObject(Node.class);
             }
+
         });
     }
 }

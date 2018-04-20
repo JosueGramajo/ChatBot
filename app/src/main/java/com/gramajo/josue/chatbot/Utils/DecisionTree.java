@@ -11,106 +11,168 @@ import java.util.ArrayList;
 public class DecisionTree {
     public static DecisionTree INSTANCE = new DecisionTree();
 
+    private final String CONTAINS = "contains";
+    private final String CONTAINS_ALL  = "contains_all";
+    private final String CARD = "card";
+    private final String REPEAT = "repeat";
+    private final String DEFAULT = "default";
+
     public void saveTree(){
+        FirebaseUtils.INSTANCE.saveTreeInFirestore(generateTree());
+    }
+
+    public Node generateTree(){
         Node masterNode = new Node();
-        ArrayList<String> keyw1 = new ArrayList<>();
-        keyw1.add("hola");
-        keyw1.add("buenos dias");
-        keyw1.add("buenos días");
-        keyw1.add("buen dia");
-        keyw1.add("buen día");
-        masterNode.setKeyWords(keyw1);
-        masterNode.setDecisionType("contains");
-        masterNode.setResponse("Buen dia, como puedo ayudarle?");
+        masterNode.setDecisionType(CONTAINS);
+        masterNode.addKeyWord("buenos dias");
+        masterNode.addKeyWord("buenos días");
+        masterNode.addKeyWord("buen dia");
+        masterNode.addKeyWord("buen día");
+        masterNode.addKeyWord("hola");
         masterNode.setLevel(1);
+        masterNode.setResponse("Buen dia, como puedo ayudarle?");
 
+        Node validationFailed = new Node();
+        validationFailed.setDecisionType(REPEAT);
+        validationFailed.setResponse("El numero de tarjeta ingresado es invalido, favor de tratar nuevamente");
+        validationFailed.setLevel(3);
 
-        Node node_card_validation_failed = new Node();
-        ArrayList<String> kcvf = new ArrayList<>();
-        kcvf.add("validation_failed");
-        node_card_validation_failed.setKeyWords(kcvf);
-        node_card_validation_failed.setDecisionType("repeat");
-        node_card_validation_failed.setResponse("El numero de tarjeta ingresado es invalido, favor de tratar nuevamente");
-        node_card_validation_failed.setLevel(3);
+        Node exit = new Node();
+        exit.setDecisionType(CONTAINS);
+        exit.addKeyWord("otra pregunta");
+        exit.addKeyWord("nueva pregunta");
+        exit.addKeyWord("otra cosa");
+        exit.setLevel(3);
+        exit.setResponse("Alguna otra cuestion con la cual pueda ayudarle?");
 
         //****************************************************************
         Node node1 = new Node();
-        ArrayList<String> keyw2 = new ArrayList<>();
-        keyw2.add("bloquear");
-        keyw2.add("bloqueo");
-        keyw2.add("bloqueen");
-        node1.setKeyWords(keyw2);
-        node1.setDecisionType("contains");
-        node1.setResponse("Con mucho gusto puedo bloquear su tarjeta, podria porfavor brindarme el numero de su tarjeta?");
+        node1.setDecisionType(CONTAINS);
+        node1.addKeyWord("bloquear");
+        node1.addKeyWord("bloqueo");
+        node1.addKeyWord("bloqueen");
         node1.setLevel(2);
+        node1.setResponse("Con mucho gusto puedo bloquear su tarjeta, podria porfavor brindarme el numero de su tarjeta?");
 
         Node node1_1 = new Node();
-        ArrayList<String> kw1_1 = new ArrayList<>();
-        kw1_1.add("");
-        node1_1.setKeyWords(kw1_1);
-        node1_1.setDecisionType("card");
+        node1_1.setDecisionType(CARD);
         node1_1.setResponse("Su tarjeta fue bloqueada exitosamente");
         node1_1.setLevel(3);
 
-        ArrayList<Node> node1_children = new ArrayList<>();
-        node1_children.add(node1_1);
-        node1_children.add(node_card_validation_failed);
-        node1.setChildren(node1_children);
+        node1.addChildren(node1_1);
+        node1.addChildren(exit);
+        node1.addChildren(validationFailed);
         //****************************************************************
 
         //****************************************************************
-        Node  node2 = new Node();
-        ArrayList<String> keyw3 = new ArrayList<>();
-        keyw3.add("puntos");
-        keyw3.add("cuantos");
-        node2.setKeyWords(keyw3);
-        node2.setDecisionType("contains");
-        node2.setResponse("Para brindarle los puntos acumulados en su tarjeta, podria porfavor brindarme el numero de su tarjeta?");
+        Node node2 = new Node();
+        node2.setDecisionType(CONTAINS);
+        node2.addKeyWord("puntos");
+        node2.addKeyWord("cuantos");
         node2.setLevel(2);
+        node2.setResponse("Para brindarle los puntos acumulados en su tarjeta, podria porfavor brindarme el numero de su tarjeta?");
 
         Node node2_1 = new Node();
-        ArrayList<String> kw2_1 = new ArrayList<>();
-        kw2_1.add("validtaion_successful");
-        node2_1.setKeyWords(kw2_1);
-        node2_1.setDecisionType("card");
+        node2_1.setDecisionType(CARD);
         node2_1.setResponse("Usted tiene |random_number| de puntos");
         node2_1.setLevel(3);
 
-        ArrayList<Node> node2_children = new ArrayList<>();
-        node2_children.add(node2_1);
-        node2_children.add(node_card_validation_failed);
-        node2.setChildren(node2_children);
+        node2.addChildren(node2_1);
+        node2.addChildren(exit);
+        node2.addChildren(validationFailed);
         //****************************************************************
 
         //****************************************************************
         Node node3 = new Node();
-        ArrayList<String> keyw4 = new ArrayList<>();
-        keyw4.add("saldo");
-        node3.setKeyWords(keyw4);
-        node3.setDecisionType("contains");
-        node3.setResponse("Si desea su saldo actual, favor de brindarme el numero de su tarjeta por favor");
+        node3.setDecisionType(CONTAINS);
+        node3.addKeyWord("saldo");
         node3.setLevel(2);
+        node3.setResponse("Si desea su saldo actual, favor de brindarme el numero de su tarjeta por favor");
 
         Node node3_1 = new Node();
-        ArrayList<String> kw3_1 = new ArrayList<>();
-        kw3_1.add("validtaion_successful");
-        node3_1.setKeyWords(kw3_1);
-        node3_1.setDecisionType("card");
+        node3_1.setDecisionType(CARD);
         node3_1.setResponse("Su saldo actual es de Q.|random_number|");
         node3_1.setLevel(3);
 
-        ArrayList<Node> node3_children = new ArrayList<>();
-        node3_children.add(node3_1);
-        node3_children.add(node_card_validation_failed);
-        node3.setChildren(node3_children);
+        node3.addChildren(node3_1);
+        node3.addChildren(exit);
+        node3.addChildren(validationFailed);
         //****************************************************************
 
-        ArrayList<Node> master_node_children = new ArrayList<>();
-        master_node_children.add(node1);
-        master_node_children.add(node2);
-        master_node_children.add(node3);
-        masterNode.setChildren(master_node_children);
+        //****************************************************************
+        Node node4 = new Node();
+        node4.setDecisionType(CONTAINS_ALL);
+        node4.addKeyWord("promocion");
+        node4.addKeyWord("tarjeta");
+        node4.addKeyWord("hoy");
+        node4.setLevel(2);
+        node4.setResponse("Con mucho gusto puedo decirle las promociones del dia de hoy, me permite el numero de su tarjeta?");
 
-        FirebaseUtils.INSTANCE.saveTreeInFirestore(masterNode);
+        Node node4_1 = new Node();
+        node4_1.setDecisionType(CARD);
+        node4_1.setResponse("Las promociones para su tarjeta el dia de hoy son: \n *2x1 en cines de Cinepolis \n *30% de descuento en Cemaco \n *Doble de millas al usar su tarjeta en cualquier establecimiento por compras mayores a Q.1,00");
+        node4_1.setLevel(3);
+
+        node4.addChildren(node4_1);
+        node4.addChildren(exit);
+        node4.addChildren(validationFailed);
+        //****************************************************************
+
+
+        //****************************************************************
+        Node node5 = new Node();
+        node5.setDecisionType(CONTAINS_ALL);
+        node5.addKeyWord("beneficio");
+        node5.addKeyWord("tarjeta");
+        node5.setLevel(2);
+        node5.setResponse("Los beneficios de nuestras tarjetas son los siguientes: *Aceptación local e internacional \n *Opciones de financiamiento \n *Tarjetas adicionales con límite de crédito diferenciado");
+        //****************************************************************
+
+        //****************************************************************
+        Node node6 = new Node();
+        node6.setDecisionType(CONTAINS);
+        node6.addKeyWord("otra tarjeta");
+        node6.addKeyWord("nueva tarjeta");
+        node6.setLevel(2);
+        node6.setResponse("Los pasos para solicitar una nueva tarjeta son: 1.Llamar a nuestro centro de atencion al cliente y contactarse con un asesor \n 2.Presentar los requisitos indicados \n 3.Proporcionar una direccion para el envio de su tarjeta");
+        //****************************************************************
+
+        //****************************************************************
+        Node node7 = new Node();
+        node7.setDecisionType(CONTAINS_ALL);
+        node7.addKeyWord("desventaja");
+        node7.addKeyWord("tarjeta");
+        node7.setLevel(2);
+        node7.setResponse("Las desventajas de TODA tarjeta de credito son: \n *Cuando usted usa tarjetas de crédito, usted es tentado a comprar con dinero inexistente en su cuenta bancaria. \n *Cuando usted usa una tarjeta de credito, usted pide prestado dinero a un acreedor, que quiere de vuelta su dinero con intereses.");
+        //****************************************************************
+
+        //****************************************************************
+        Node node99 = new Node();
+        node99.setDecisionType(CONTAINS_ALL);
+        node99.addKeyWord("buena");
+        node99.addKeyWord("onda");
+        node99.setLevel(2);
+        node99.setResponse("Vivo :D");
+        //****************************************************************
+
+        //****************************************************************
+        Node node100 = new Node();
+        node100.setDecisionType(CONTAINS_ALL);
+        node100.addKeyWord("chiste");
+        node100.setLevel(2);
+        node100.setResponse("Que es un terapeuta? 1024 gigapeutas (☞ﾟヮﾟ)☞");
+        //****************************************************************
+
+        masterNode.addChildren(node1);
+        masterNode.addChildren(node2);
+        masterNode.addChildren(node3);
+        masterNode.addChildren(node4);
+        masterNode.addChildren(node5);
+        masterNode.addChildren(node6);
+        masterNode.addChildren(node7);
+        masterNode.addChildren(node99);
+        masterNode.addChildren(node100);
+
+        return masterNode;
     }
 }

@@ -1,23 +1,30 @@
 package com.gramajo.josue.chatbot;
 
+import android.*;
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.gramajo.josue.chatbot.Adapters.ChatAdapter;
 import com.gramajo.josue.chatbot.Objects.Message;
@@ -30,9 +37,8 @@ import com.gramajo.josue.chatbot.Utils.JsonUtil;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,30 +51,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String currentMessage = "";
 
-    boolean waitingConfirmation = false;
-
     SharedPreferences settings;
-
-    private enum ResponseType{
-        QUESTION,
-        CONFIRMATION,
-        CARD_NUMBER,
-        CARD_DATE,
-        CARD_SECURITY_NUMBER,
-        DEFAULT
-    }
-    /*private enum ContextType{
-        CONSULT,
-        QUESTION,
-        BLOCK_CARD,
-        ACTIVATE_CARD,
-        ACTIVATE_ABROAD_CARD,
-        POINTS_INFORMATION,
-        BALANCE_INFORMATION,
-        MOVEMENT_INFORMATION
-    }*/
-
-    private ResponseType expectedResponseType = ResponseType.DEFAULT;
 
     private String evaluationTreeID = "";
     private Node evaulationTree;
@@ -226,18 +209,22 @@ public class MainActivity extends AppCompatActivity {
 
     private String decideResponse(){
         String text = this.currentMessage.toLowerCase().trim();
-        String response = "";
+
+        if(GlobalAccess.TREE == null) GlobalAccess.TREE = DecisionTree.INSTANCE.generateTree();
 
         if(evaulationTree == null) evaulationTree = GlobalAccess.TREE;
 
         if(evaluationTreeID == ""){
             if(validateNode(evaulationTree, text)){
-                return evaulationTree.getResponse();
+                return changeValues(evaulationTree.getResponse());
             }else{
                 for(Node n : evaulationTree.getChildren()){
                     if(validateNode(n, text)){
-                        evaluationTreeID = n.getId();
-                        return n.getResponse();
+                        if(n.getChildren() != null){
+                            evaluationTreeID = n.getId();
+                        }
+
+                        return changeValues(n.getResponse());
                     }
                 }
             }
@@ -253,15 +240,21 @@ public class MainActivity extends AppCompatActivity {
                             evaluationTreeID = "";
                         }
                     }
-
-                    return n.getResponse();
+                    return changeValues(n.getResponse());
                 }
             }
         }
 
-
         FirebaseUtils.INSTANCE.saveUnansweredQuestion(text);
         return "Lo siento, no puedo entender la pregunta";
+    }
+
+    private String changeValues(String value){
+        String newValue = value;
+
+        newValue = newValue.replace("|random_number|", String.valueOf(new Random().nextInt(10000)));
+
+        return newValue;
     }
 
     private void searchEvaluationTree(Node node){
@@ -287,6 +280,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 break;
+            case "contains_all":
+                for(String s : node.getKeyWords()){
+                    if(text.indexOf(s) < 0){
+                        return false;
+                    }
+                }
+                return true;
             case "card":
                 return validateCreditCard(text);
 
@@ -303,7 +303,6 @@ public class MainActivity extends AppCompatActivity {
         }catch (NumberFormatException nfe){
             return false;
         }
-
         ArrayList<Integer> multipliedNumbers = new ArrayList<>();
         //4 0 1 2 8 8 8 8 8 8 8 8 1 8 8 1
         for(int i = 0;i<card.length();i++){
@@ -314,7 +313,6 @@ public class MainActivity extends AppCompatActivity {
                 if(strResult.length() > 1){
                     result = Integer.parseInt(strResult.substring(0,1)) + Integer.parseInt(strResult.substring(1,2));
                 }
-
                 multipliedNumbers.add(result);
             }else{
                 multipliedNumbers.add(Integer.parseInt(character));
@@ -324,7 +322,6 @@ public class MainActivity extends AppCompatActivity {
         for(int i : multipliedNumbers){
             total = total + i;
         }
-
         return total % 10 == 0;
     }
 

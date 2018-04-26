@@ -157,6 +157,10 @@ public class MainActivity extends AppCompatActivity {
             FirebaseUtils.INSTANCE.retrieveDecisionTree(this);
             return true;
         }else if(id == R.id.update_firestore){
+            if(!GlobalAccess.USER.equals("josue")){
+                Toast.makeText(this, "No tenes los privilegios administrativos chavo ;)", Toast.LENGTH_SHORT).show();
+                return false;
+            }
             DecisionTree.INSTANCE.saveTree();
             return true;
         }

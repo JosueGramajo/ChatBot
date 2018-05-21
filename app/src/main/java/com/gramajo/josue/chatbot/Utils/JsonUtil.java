@@ -27,7 +27,8 @@ public class JsonUtil {
 
     public enum FILE_TYPE{
         MESSAGES("messages"),
-        QUESTIONS("unanswered");
+        QUESTIONS("unanswered"),
+        DECISION_TREE("tree");
 
         private String value;
 

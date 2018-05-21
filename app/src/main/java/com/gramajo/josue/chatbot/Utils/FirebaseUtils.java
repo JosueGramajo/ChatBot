@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -135,6 +136,7 @@ public class FirebaseUtils {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 GlobalAccess.TREE = documentSnapshot.toObject(Node.class);
+                JsonUtil.INSTANCE.writeJson(context, GlobalAccess.TREE, JsonUtil.FILE_TYPE.DECISION_TREE);
                 Toast.makeText(context, "Arbol actualizado", Toast.LENGTH_SHORT).show();
             }
 

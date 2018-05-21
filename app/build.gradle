@@ -6,8 +6,8 @@ android {
         applicationId "com.gramajo.josue.chatbot"
         minSdkVersion 21
         targetSdkVersion 26
-        versionCode 3
-        versionName "0.3"
+        versionCode 4
+        versionName "0.4"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

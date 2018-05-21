@@ -37,6 +37,14 @@ public class DecisionTree {
         validationFailed.setResponse("El numero de tarjeta ingresado es invalido, favor de tratar nuevamente");
         validationFailed.setLevel(3);
 
+        Node validationDenied = new Node();
+        validationDenied.setDecisionType(CONTAINS);
+        validationDenied.addKeyWord("no");
+        validationDenied.addKeyWord("negativo");
+        validationDenied.addKeyWord("nel");
+        validationDenied.setLevel(3);
+        validationDenied.setResponse("Entendido, alguna otra cuestion con la cual pueda ayudarle?");
+
         Node exit = new Node();
         exit.setDecisionType(CONTAINS);
         exit.addKeyWord("otra pregunta");
@@ -61,6 +69,7 @@ public class DecisionTree {
 
         node1.addChildren(node1_1);
         node1.addChildren(exit);
+        node1.addChildren(validationDenied);
         node1.addChildren(validationFailed);
         //****************************************************************
 
@@ -79,6 +88,7 @@ public class DecisionTree {
 
         node2.addChildren(node2_1);
         node2.addChildren(exit);
+        node2.addChildren(validationDenied);
         node2.addChildren(validationFailed);
         //****************************************************************
 
@@ -96,6 +106,7 @@ public class DecisionTree {
 
         node3.addChildren(node3_1);
         node3.addChildren(exit);
+        node3.addChildren(validationDenied);
         node3.addChildren(validationFailed);
         //****************************************************************
 
@@ -110,11 +121,12 @@ public class DecisionTree {
 
         Node node4_1 = new Node();
         node4_1.setDecisionType(CARD);
-        node4_1.setResponse("Las promociones para su tarjeta el dia de hoy son: \n *2x1 en cines de Cinepolis \n *30% de descuento en Cemaco \n *Doble de millas al usar su tarjeta en cualquier establecimiento por compras mayores a Q.1,00");
+        node4_1.setResponse("Las promociones para su tarjeta el dia de hoy son: \n *2x1 en cines de Cinepolis \n *30% de descuento en Cemaco \n *Doble de millas al usar su tarjeta en cualquier establecimiento por compras mayores a Q.1,000");
         node4_1.setLevel(3);
 
         node4.addChildren(node4_1);
         node4.addChildren(exit);
+        node4.addChildren(validationDenied);
         node4.addChildren(validationFailed);
         //****************************************************************
 
@@ -171,6 +183,7 @@ public class DecisionTree {
 
         node9.addChildren(node9_1);
         node9.addChildren(exit);
+        node9.addChildren(validationDenied);
         node9.addChildren(validationFailed);
         //****************************************************************
 
@@ -181,6 +194,44 @@ public class DecisionTree {
         node10.addKeyWord("pago");
         node10.setLevel(2);
         node10.setResponse("La fecha de pago para todas nuestras tarjetas es el fin de cada mes");
+        //****************************************************************
+
+        //****************************************************************
+        Node node11 = new Node();
+        node11.setDecisionType(CONTAINS_ALL);
+        node11.addKeyWord("el");
+        node11.addKeyWord("credito");
+        node11.setLevel(2);
+        node11.setResponse("Para proporcionarle e credito disponible de su tarjeta, es requerido la numeracion de dicha tarjeta, podria brindarmela?");
+
+        Node node11_1 = new Node();
+        node11_1.setDecisionType(CARD);
+        node11_1.setLevel(3);
+        node11_1.setResponse("Su credito disponible es de Q.|random_number|");
+
+        node11.addChildren(node11_1);
+        node11.addChildren(exit);
+        node11.addChildren(validationDenied);
+        node11.addChildren(validationFailed);
+        //****************************************************************
+
+        //****************************************************************
+        Node node12 = new Node();
+        node12.setDecisionType(CONTAINS_ALL);
+        node12.addKeyWord("promocion");
+        node12.addKeyWord("tarjeta");
+        node12.setLevel(2);
+        node12.setResponse("Con mucho gusto puedo decirle las promociones de su tarjeta, me permite la numeracion?");
+
+        Node node12_1 = new Node();
+        node12.setDecisionType(CARD);
+        node12.setResponse("Las promociones para su tarjeta son: \n *2x1 en puntos en compras mayores a Q.500 \n *Doble de millas al usar su tarjeta en cualquier establecimiento por compras mayores a Q.1,000");
+        node12.setLevel(3);
+
+        node12.addChildren(node12_1);
+        node12.addChildren(exit);
+        node12.addChildren(validationDenied);
+        node12.addChildren(validationFailed);
         //****************************************************************
 
         //****************************************************************
@@ -234,6 +285,8 @@ public class DecisionTree {
         masterNode.addChildren(node8);
         masterNode.addChildren(node9);
         masterNode.addChildren(node10);
+        masterNode.addChildren(node11);
+        masterNode.addChildren(node12);
         masterNode.addChildren(node98);
         masterNode.addChildren(node99);
         masterNode.addChildren(node100);

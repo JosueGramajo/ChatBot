@@ -213,6 +213,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String decideResponse(){
         String text = this.currentMessage.toLowerCase().trim();
+        text = removeAccent(text);
 
         if(GlobalAccess.TREE == null) GlobalAccess.TREE = DecisionTree.INSTANCE.generateTree();
 
@@ -293,7 +294,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case "card":
                 return validateCreditCard(text);
-
             case "repeat": return true;
             case "default": return true;
         }
@@ -327,6 +327,17 @@ public class MainActivity extends AppCompatActivity {
             total = total + i;
         }
         return total % 10 == 0;
+    }
+
+    private String removeAccent(String text){
+        String newText = text;
+        newText = newText.replace("á","a");
+        newText = newText.replace("é","e");
+        newText = newText.replace("í","i");
+        newText = newText.replace("ó","o");
+        newText = newText.replace("ú","u");
+        newText = newText.replace("ü","u");
+        return newText;
     }
 
     private class RespondeAsynchronously extends AsyncTask<String, Void, String> {

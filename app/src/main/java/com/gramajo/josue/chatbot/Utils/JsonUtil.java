@@ -21,7 +21,7 @@ import static android.content.Context.MODE_PRIVATE;
  * Created by josuegramajo on 4/10/18.
  */
 
-public class JsonUtil {
+    public class JsonUtil {
 
     public static JsonUtil INSTANCE = new JsonUtil();
 
